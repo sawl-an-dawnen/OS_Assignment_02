@@ -11,7 +11,7 @@ struct process {
     int deadline;
     int computationTime;
     vector<string> instructions;
-    void request(int)
+    void request(int);
 };
 
 struct resource {
@@ -59,12 +59,25 @@ void Manager::initilize (string argument_1, string argument_2) {
 
     //available---how many instances of each resources there are
     cout << "available: " << endl;
+    //record how many instances of resource type i there are available
+    getline(input, temp);
+    //preping input with delimiter ":"
+    temp.insert(temp.size()-1,":");//some wierd endline character is at the end of my input and lobing off characters in the next line couldnt figure out what that was so i added delimiters
+    while (temp.find(' ') != string::npos)  {
+        temp[temp.find(' ')] = ':';
+    }
+
+    for (int i = 0; i < r; i++) {
+        available.push_back(stoi(temp.substr(0,temp.find(':'))));
+        temp.erase(0,temp.find(':') + 1);
+    }
+    for (int i = 0; i < available.size(); i++)  {
+        cout << available[i] << " ";
+    }
+    cout << endl;
+
     for(int i = 0; i < r; i++)  {
         resource resource_temp;
-
-        //record how many instances of resource type i there are available
-        getline(input, temp);
-        available.push_back(stoi(temp.substr(13)));
 
         //recording the word file input with instances of resource type i
         getline(words, temp);
@@ -73,11 +86,10 @@ void Manager::initilize (string argument_1, string argument_2) {
                 temp.erase(temp.begin()+j);
             }
         }
-
         resource_temp.type = temp.substr(temp.find(':') + 1, temp.find(':', temp.find(":") + 1) - (temp.find(':') + 1));
         cout << "resource " << i << " type: " << resource_temp.type << endl;
         temp.erase(0,temp.find(':',temp.find(':') + 1) + 1);
-
+        temp.insert(temp.size()-1,",");
         cout << "resource " << i << " has " << available[i] << " instances: ";
         for (int j = 0; j < available[i]; j++)  {
             resource_temp.instances.push_back(temp.substr(0, temp.find(',')));
@@ -175,7 +187,7 @@ void Manager::initilize_alt (string argument_1, string argument_2) {
         resource_temp.type = temp.substr(temp.find(':') + 1, temp.find(':', temp.find(":") + 1) - (temp.find(':') + 1));
         cout << "resource " << i << " type: " << resource_temp.type << endl;
         temp.erase(0,temp.find(':',temp.find(':') + 1) + 1);
-
+        temp.insert(temp.size()-1,",");
         cout << "resource " << i << " has " << available[i] << " instances: ";
         for (int j = 0; j < available[i]; j++)  {
             resource_temp.instances.push_back(temp.substr(0, temp.find(',')));
