@@ -11,27 +11,29 @@ struct process {
     int deadline;
     int computationTime;
     vector<string> instructions;
+    void request(int)
 };
 
 struct resource {
     string type;
-
+    vector<string> instances;
 };
 
 class Manager {
     public:
-    bool isMatrix = true;
     int r; //number of resources
     int p; //number of processes
-    vector<int> available; //number of available resources from resource 1, 2, ... r
+    vector<int> available; //number of instances available of a particular resources from resource 1, 2, ... r
     vector<vector<int>> max; //maximum demand for resource r by process n. takes the form max[n,m]
     vector<process> processes; //a vector of processes with deadlines, compTimes, and their instructions
-    void initilize(string argument); //argument is the argv[1] from the input
-    void initilize_alt(string argument); //argument is argv[1]
+    vector<resource> resources; //a vector of all resources and their instances
+    void initilize(string argument_1, string argument_2); //argument is the argv[1] from the input and 2 is the second argv[2]
+    void initilize_alt(string argument_1, string argument_2); //argument is argv[1]
 };
 
-void Manager::initilize (string argument) {
-    ifstream input(argument);
+void Manager::initilize (string argument_1, string argument_2) {
+    ifstream input(argument_1);
+    ifstream words(argument_2);
     string temp;
 
     //number of resources
@@ -47,38 +49,98 @@ void Manager::initilize (string argument) {
     //first line of available[] input, will determine if isMatrix remains true;
     getline(input, temp);
     if (temp.find("available") != string::npos) {
-        isMatrix = false;
-    }
-
-    if(!isMatrix) {
         //call alternative initilize
-        initilize_alt(argument);
+        initilize_alt(argument_1, argument_2);
         return;
     }
 
     //matrix info
-    while(temp.find("process") == string::npos) {
-        getline(input, temp);
-        cout << temp << endl;
-    }
-    cout << endl << endl;
-    cout << temp;
+    cout << "---matrix info---" << endl << endl;
 
-    /*
-    while(!input.eof()) {
+    //available---how many instances of each resources there are
+    cout << "available: " << endl;
+    for(int i = 0; i < r; i++)  {
+        resource resource_temp;
+
+        //record how many instances of resource type i there are available
         getline(input, temp);
-        cout << temp << endl;
+        available.push_back(stoi(temp.substr(13)));
+
+        //recording the word file input with instances of resource type i
+        getline(words, temp);
+        for (int j = 0; j < temp.size(); j++) {
+            if (temp[j] == ' ') {
+                temp.erase(temp.begin()+j);
+            }
+        }
+
+        resource_temp.type = temp.substr(temp.find(':') + 1, temp.find(':', temp.find(":") + 1) - (temp.find(':') + 1));
+        cout << "resource " << i << " type: " << resource_temp.type << endl;
+        temp.erase(0,temp.find(':',temp.find(':') + 1) + 1);
+
+        cout << "resource " << i << " has " << available[i] << " instances: ";
+        for (int j = 0; j < available[i]; j++)  {
+            resource_temp.instances.push_back(temp.substr(0, temp.find(',')));
+            cout << resource_temp.instances[j] << " ";
+            temp.erase(0,temp.find(',') + 1);
+        }
+        resources.push_back(resource_temp); //place resource into the manager object's vector for storage
+        cout << endl << endl;
     }
-    */
+
+    //max--defines how many resource units of type j that process i can demand at one time
+    cout << "max info:" << endl;
+    for(int i = 0; i < p; i++)  {
+        vector<int> demand;
+        max.push_back(demand);
+        for (int j = 0; j < r; j++) {
+            getline(input, temp);
+            //cout << " maximum demand for resource " << j << " by process " << i << ": " << temp << endl;
+            cout << "maximum demand for resource " << j << " by process " << i << ": ";
+            max[i].push_back(stoi(temp.substr(9)));
+            cout << max[i][j] << endl;
+        }
+    }
+    cout << endl;
+
+    cout << "---process definition and instructions---" << endl << endl;
+    for (int i = 0; i < p; i++) {
+        process process_temp;
+        getline(input, temp); //eat the name of the process
+        cout << temp << endl;
+
+        getline(input, temp);
+        process_temp.deadline = stoi(temp);
+        cout << "deadline: " << process_temp.deadline << endl;
+
+        getline(input, temp);
+        process_temp.computationTime = stoi(temp);
+        cout << "computation time: " << process_temp.computationTime << endl;
+
+        cout << endl;
+
+        while (temp != "end.") {
+            getline(input, temp);
+            process_temp.instructions.push_back(temp);
+        }
+
+        for (int i = 0; i < process_temp.instructions.size(); i++) {
+            cout << process_temp.instructions[i] << endl;
+        }
+
+        processes.push_back(process_temp);
+        cout << endl << "---------------------" << endl << endl;
+    }
 
     return;
 }
 
-void Manager::initilize_alt (string argument) {
-    ifstream input(argument);
+void Manager::initilize_alt (string argument_1, string argument_2) {
+    ifstream input(argument_1);
+    ifstream words(argument_2);
     string temp;
 
-    cout << "Enter alternative initilize function." << endl << endl;
+    cout << "---Entering alternative initilize function---" << endl << endl;
 
     //number of resources
     getline(input, temp);
@@ -91,33 +153,81 @@ void Manager::initilize_alt (string argument) {
     cout <<"p: " << p << endl << endl;
 
     //matrix info
-    cout << "matrix info:" << endl;
-    //available
-    cout << "available:" << endl;
+    cout << "---matrix info---" << endl << endl;
+
+    //available---how many instances of each resources there are
+    cout << "available: " << endl;
     for(int i = 0; i < r; i++)  {
+        resource resource_temp;
+
+        //record how many instances of resource type i there are available
         getline(input, temp);
-        cout << temp << endl; 
+        available.push_back(stoi(temp.substr(13)));
+
+        //recording the word file input with instances of resource type i
+        getline(words, temp);
+        for (int j = 0; j < temp.size(); j++) {
+            if (temp[j] == ' ') {
+                temp.erase(temp.begin()+j);
+            }
+        }
+
+        resource_temp.type = temp.substr(temp.find(':') + 1, temp.find(':', temp.find(":") + 1) - (temp.find(':') + 1));
+        cout << "resource " << i << " type: " << resource_temp.type << endl;
+        temp.erase(0,temp.find(':',temp.find(':') + 1) + 1);
+
+        cout << "resource " << i << " has " << available[i] << " instances: ";
+        for (int j = 0; j < available[i]; j++)  {
+            resource_temp.instances.push_back(temp.substr(0, temp.find(',')));
+            cout << resource_temp.instances[j] << " ";
+            temp.erase(0,temp.find(',') + 1);
+        }
+        resources.push_back(resource_temp); //place resource into the manager object's vector for storage
+        cout << endl << endl;
     }
-    //max
-    cout << "max:" << endl;
+
+    //max--defines how many resource units of type j that process i can demand at one time
+    cout << "max info:" << endl;
     for(int i = 0; i < p; i++)  {
+        vector<int> demand;
+        max.push_back(demand);
         for (int j = 0; j < r; j++) {
             getline(input, temp);
-            cout << i << " " << j << " " << temp << endl; 
+            //cout << " maximum demand for resource " << j << " by process " << i << ": " << temp << endl;
+            cout << "maximum demand for resource " << j << " by process " << i << ": ";
+            max[i].push_back(stoi(temp.substr(9)));
+            cout << max[i][j] << endl;
         }
     }
-
-    while(temp.find("process") == string::npos) {//first occurance of a process
-        getline(input, temp);
-        if(temp.find("process") != string::npos) {continue;}
-        cout << temp << endl;
-    }
     cout << endl;
-    cout << temp << endl;
 
-    while(!input.eof()) {
-        getline(input, temp);
+    cout << "---process definition and instructions---" << endl << endl;
+    for (int i = 0; i < p; i++) {
+        process process_temp;
+        getline(input, temp); //eat the name of the process
         cout << temp << endl;
+
+        getline(input, temp);
+        process_temp.deadline = stoi(temp);
+        cout << "deadline: " << process_temp.deadline << endl;
+
+        getline(input, temp);
+        process_temp.computationTime = stoi(temp);
+        cout << "computation time: " << process_temp.computationTime << endl;
+
+        cout << endl;
+
+        while (temp != "end.") {
+            getline(input, temp);
+            process_temp.instructions.push_back(temp);
+        }
+
+        for (int i = 0; i < process_temp.instructions.size(); i++) {
+            cout << process_temp.instructions[i] << endl;
+        }
+
+        processes.push_back(process_temp);
+        cout << endl << "---------------------" << endl << endl;
     }
 
     return;
