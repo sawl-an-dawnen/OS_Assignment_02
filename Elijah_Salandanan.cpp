@@ -2,8 +2,6 @@
 #include <unistd.h>
 #include "helper.h"
 
-
-
 int main(int argc, char** argv) {
 
    ofstream output("Output/output.txt");

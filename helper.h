@@ -71,6 +71,7 @@ void Manager::initilize (string argument_1, string argument_2) {
         available.push_back(stoi(temp.substr(0,temp.find(':'))));
         temp.erase(0,temp.find(':') + 1);
     }
+
     for (int i = 0; i < available.size(); i++)  {
         cout << available[i] << " ";
     }
@@ -100,20 +101,29 @@ void Manager::initilize (string argument_1, string argument_2) {
         cout << endl << endl;
     }
 
+    getline(input, temp);//eat a line
+
     //max--defines how many resource units of type j that process i can demand at one time
     cout << "max info:" << endl;
     for(int i = 0; i < p; i++)  {
         vector<int> demand;
         max.push_back(demand);
+        getline(input, temp);
+        //prep line for parsing
+        temp.insert(temp.size()-1,":");//some wierd endline character is at the end of my input and lobing off characters in the next line couldnt figure out what that was so i added delimiters
+        while (temp.find(' ') != string::npos)  {
+            temp[temp.find(' ')] = ':';
+        }
         for (int j = 0; j < r; j++) {
-            getline(input, temp);
-            //cout << " maximum demand for resource " << j << " by process " << i << ": " << temp << endl;
             cout << "maximum demand for resource " << j << " by process " << i << ": ";
-            max[i].push_back(stoi(temp.substr(9)));
+            max[i].push_back(stoi(temp.substr(0,temp.find(':'))));
+            temp.erase(0,temp.find(':') + 1);
             cout << max[i][j] << endl;
         }
     }
     cout << endl;
+
+    getline(input, temp); //eat a line
 
     cout << "---process definition and instructions---" << endl << endl;
     for (int i = 0; i < p; i++) {
@@ -131,7 +141,7 @@ void Manager::initilize (string argument_1, string argument_2) {
 
         cout << endl;
 
-        while (temp != "end.") {
+        while (temp.find("end.") == string::npos) {
             getline(input, temp);
             process_temp.instructions.push_back(temp);
         }
