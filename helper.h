@@ -11,12 +11,14 @@ struct process {
     int deadline;
     int computationTime;
     vector<string> instructions;
-    void request(int);
+    int pipeRead[2];//process will read from parent
+    int pipeWrite[2];//process will wrtie to parent
 };
 
 struct resource {
     string type;
     vector<string> instances;
+    int allocated = 0;
 };
 
 class Manager {
@@ -149,6 +151,9 @@ void Manager::initilize (string argument_1, string argument_2) {
         for (int i = 0; i < process_temp.instructions.size(); i++) {
             cout << process_temp.instructions[i] << endl;
         }
+
+        pipe(process_temp.pipeRead);
+        pipe(process_temp.pipeWrite);
 
         processes.push_back(process_temp);
         cout << endl << "---------------------" << endl << endl;
