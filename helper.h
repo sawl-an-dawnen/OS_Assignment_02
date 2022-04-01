@@ -18,7 +18,7 @@ struct process {
 struct resource {
     string type;
     vector<string> instances;
-    int allocated = 0;
+    vector<int> allocated; //if 1 not allocated if 0 this resource is unavailable
 };
 
 class Manager {
@@ -36,17 +36,18 @@ class Manager {
 void Manager::initilize (string argument_1, string argument_2) {
     ifstream input(argument_1);
     ifstream words(argument_2);
+    ofstream packageInfo("Output/Info.txt");
     string temp;
 
     //number of resources
     getline(input, temp);
     r = stoi(temp);
-    cout <<"r: " << r << endl;
+    packageInfo <<"r: " << r << endl;
 
     //number of processes
     getline(input, temp);
     p = stoi(temp);
-    cout <<"p: " << p << endl << endl;
+    packageInfo <<"p: " << p << endl << endl;
 
     //first line of available[] input, will determine if isMatrix remains true;
     getline(input, temp);
@@ -57,10 +58,10 @@ void Manager::initilize (string argument_1, string argument_2) {
     }
 
     //matrix info
-    cout << "---matrix info---" << endl << endl;
+    packageInfo << "---matrix info---" << endl << endl;
 
     //available---how many instances of each resources there are
-    cout << "available: " << endl;
+    packageInfo << "available info: " << endl;
     //record how many instances of resource type i there are available
     getline(input, temp);
     //preping input with delimiter ":"
@@ -75,9 +76,9 @@ void Manager::initilize (string argument_1, string argument_2) {
     }
 
     for (int i = 0; i < available.size(); i++)  {
-        cout << available[i] << " ";
+        packageInfo << available[i] << " ";
     }
-    cout << endl;
+    packageInfo << endl;
 
     for(int i = 0; i < r; i++)  {
         resource resource_temp;
@@ -90,23 +91,24 @@ void Manager::initilize (string argument_1, string argument_2) {
             }
         }
         resource_temp.type = temp.substr(temp.find(':') + 1, temp.find(':', temp.find(":") + 1) - (temp.find(':') + 1));
-        cout << "resource " << i << " type: " << resource_temp.type << endl;
+        packageInfo << "resource " << i << " type: " << resource_temp.type << endl;
         temp.erase(0,temp.find(':',temp.find(':') + 1) + 1);
         temp.insert(temp.size()-1,",");
-        cout << "resource " << i << " has " << available[i] << " instances: ";
+        packageInfo << "resource " << i << " has " << available[i] << " instances: ";
         for (int j = 0; j < available[i]; j++)  {
             resource_temp.instances.push_back(temp.substr(0, temp.find(',')));
-            cout << resource_temp.instances[j] << " ";
+            resource_temp.allocated.push_back(1);
+            packageInfo << resource_temp.instances[j] << " ";
             temp.erase(0,temp.find(',') + 1);
         }
         resources.push_back(resource_temp); //place resource into the manager object's vector for storage
-        cout << endl << endl;
+        packageInfo << endl << endl;
     }
 
     getline(input, temp);//eat a line
 
     //max--defines how many resource units of type j that process i can demand at one time
-    cout << "max info:" << endl;
+    packageInfo << "max info:" << endl;
     for(int i = 0; i < p; i++)  {
         vector<int> demand;
         max.push_back(demand);
@@ -117,31 +119,31 @@ void Manager::initilize (string argument_1, string argument_2) {
             temp[temp.find(' ')] = ':';
         }
         for (int j = 0; j < r; j++) {
-            cout << "maximum demand for resource " << j << " by process " << i << ": ";
+            packageInfo << "maximum demand for resource " << j << " by process " << i << ": ";
             max[i].push_back(stoi(temp.substr(0,temp.find(':'))));
             temp.erase(0,temp.find(':') + 1);
-            cout << max[i][j] << endl;
+            packageInfo << max[i][j] << endl;
         }
     }
-    cout << endl;
+    packageInfo << endl;
 
     getline(input, temp); //eat a line
 
-    cout << "---process definition and instructions---" << endl << endl;
+    packageInfo << "---process definition and instructions---" << endl << endl;
     for (int i = 0; i < p; i++) {
         process process_temp;
         getline(input, temp); //eat the name of the process
-        cout << temp << endl;
+        packageInfo << temp << endl;
 
         getline(input, temp);
         process_temp.deadline = stoi(temp);
-        cout << "deadline: " << process_temp.deadline << endl;
+        packageInfo << "deadline: " << process_temp.deadline << endl;
 
         getline(input, temp);
         process_temp.computationTime = stoi(temp);
-        cout << "computation time: " << process_temp.computationTime << endl;
+        packageInfo << "computation time: " << process_temp.computationTime << endl;
 
-        cout << endl;
+        packageInfo << endl;
 
         while (temp.find("end.") == string::npos) {
             getline(input, temp);
@@ -149,14 +151,14 @@ void Manager::initilize (string argument_1, string argument_2) {
         }
 
         for (int i = 0; i < process_temp.instructions.size(); i++) {
-            cout << process_temp.instructions[i] << endl;
+            packageInfo << process_temp.instructions[i] << endl;
         }
 
         pipe(process_temp.pipeRead);
         pipe(process_temp.pipeWrite);
 
         processes.push_back(process_temp);
-        cout << endl << "---------------------" << endl << endl;
+        packageInfo << endl << "---------------------" << endl << endl;
     }
 
     return;
@@ -165,25 +167,26 @@ void Manager::initilize (string argument_1, string argument_2) {
 void Manager::initilize_alt (string argument_1, string argument_2) {
     ifstream input(argument_1);
     ifstream words(argument_2);
+    ofstream packageInfo("Output/Info.txt");
     string temp;
 
-    cout << "---Entering alternative initilize function---" << endl << endl;
+    packageInfo << "---Entering alternative initilize function---" << endl << endl;
 
     //number of resources
     getline(input, temp);
     r = stoi(temp);
-    cout <<"r: " << r << endl;
+    packageInfo <<"r: " << r << endl;
 
     //number of processes
     getline(input, temp);
     p = stoi(temp);
-    cout <<"p: " << p << endl << endl;
+    packageInfo <<"p: " << p << endl << endl;
 
     //matrix info
-    cout << "---matrix info---" << endl << endl;
+    packageInfo << "---matrix info---" << endl << endl;
 
     //available---how many instances of each resources there are
-    cout << "available: " << endl;
+    packageInfo << "available info: " << endl;
     for(int i = 0; i < r; i++)  {
         resource resource_temp;
 
@@ -200,49 +203,50 @@ void Manager::initilize_alt (string argument_1, string argument_2) {
         }
 
         resource_temp.type = temp.substr(temp.find(':') + 1, temp.find(':', temp.find(":") + 1) - (temp.find(':') + 1));
-        cout << "resource " << i << " type: " << resource_temp.type << endl;
+        packageInfo << "resource " << i << " type: " << resource_temp.type << endl;
         temp.erase(0,temp.find(':',temp.find(':') + 1) + 1);
         temp.insert(temp.size()-1,",");
-        cout << "resource " << i << " has " << available[i] << " instances: ";
+        packageInfo << "resource " << i << " has " << available[i] << " instances: ";
         for (int j = 0; j < available[i]; j++)  {
             resource_temp.instances.push_back(temp.substr(0, temp.find(',')));
-            cout << resource_temp.instances[j] << " ";
+            resource_temp.allocated.push_back(1);
+            packageInfo << resource_temp.instances[j] << " ";
             temp.erase(0,temp.find(',') + 1);
         }
         resources.push_back(resource_temp); //place resource into the manager object's vector for storage
-        cout << endl << endl;
+        packageInfo << endl << endl;
     }
 
     //max--defines how many resource units of type j that process i can demand at one time
-    cout << "max info:" << endl;
+    packageInfo << "max info:" << endl;
     for(int i = 0; i < p; i++)  {
         vector<int> demand;
         max.push_back(demand);
         for (int j = 0; j < r; j++) {
             getline(input, temp);
-            //cout << " maximum demand for resource " << j << " by process " << i << ": " << temp << endl;
-            cout << "maximum demand for resource " << j << " by process " << i << ": ";
+            //packageInfo << " maximum demand for resource " << j << " by process " << i << ": " << temp << endl;
+            packageInfo << "maximum demand for resource " << j << " by process " << i << ": ";
             max[i].push_back(stoi(temp.substr(9)));
-            cout << max[i][j] << endl;
+            packageInfo << max[i][j] << endl;
         }
     }
-    cout << endl;
+    packageInfo << endl;
 
-    cout << "---process definition and instructions---" << endl << endl;
+    packageInfo << "---process definition and instructions---" << endl << endl;
     for (int i = 0; i < p; i++) {
         process process_temp;
         getline(input, temp); //eat the name of the process
-        cout << temp << endl;
+        packageInfo << temp << endl;
 
         getline(input, temp);
         process_temp.deadline = stoi(temp);
-        cout << "deadline: " << process_temp.deadline << endl;
+        packageInfo << "deadline: " << process_temp.deadline << endl;
 
         getline(input, temp);
         process_temp.computationTime = stoi(temp);
-        cout << "computation time: " << process_temp.computationTime << endl;
+        packageInfo << "computation time: " << process_temp.computationTime << endl;
 
-        cout << endl;
+        packageInfo << endl;
 
         while (temp != "end.") {
             getline(input, temp);
@@ -250,11 +254,11 @@ void Manager::initilize_alt (string argument_1, string argument_2) {
         }
 
         for (int i = 0; i < process_temp.instructions.size(); i++) {
-            cout << process_temp.instructions[i] << endl;
+            packageInfo << process_temp.instructions[i] << endl;
         }
 
         processes.push_back(process_temp);
-        cout << endl << "---------------------" << endl << endl;
+        packageInfo << endl << "---------------------" << endl << endl;
     }
 
     return;
