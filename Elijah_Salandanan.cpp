@@ -50,8 +50,8 @@ int main(int argc, char** argv) {
       */
 
       //a matrix that will tell me how many of what resource i have as well as the instance of that resource
-      vector<vector<int>> myResources;
-      vector<vector<int>> masterString;
+      vector<vector<int>> myResources;//current resources i have allocated to this process
+      vector<vector<int>> masterString;//index of stored resources and the instances used in process
       for (int i = 0; i < package.r; i++) {
          vector<int> temp;
          for (int j = 0; j < package.available[i]; j++) {
@@ -107,6 +107,12 @@ int main(int argc, char** argv) {
                data = stoi(prompt.substr(prompt.find('(')), prompt.find(')') - prompt.find('('))
                write(package.processes[pnum].pipeWrite[1], &data, sizeof(data));
                //add myResources to master string
+
+               for (int j = 0; j < package.r; j++) {
+                  for (int k = 0; k < package.resources.size(); k++) {
+                     masterString[j][k] = masterString[j][k] + myResources[j][k];
+                  }
+               }
                break;
             case 3:
                // this process will print out the process calling the print function as well as the process' master string
