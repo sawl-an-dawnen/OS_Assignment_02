@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
                //write instruction id 0
                write(package.processes[pnum].pipeWrite[1], &instr, sizeof(instr));
                //write each resouce request one after another
-               promt.erase(0,7);//erase "request"
+               prompt.erase(0,7);//erase "request"
                for (int j = 0; j < package.r; j++) {
                   //write the resource being requested
                }
@@ -94,7 +94,7 @@ int main(int argc, char** argv) {
                //write instruction id 1
                write(package.processes[pnum].pipeWrite[1], &instr, sizeof(instr));
                //write number of cylces to run calculations
-               data = stoi(prompt.substr(prompt.find('(')), prompt.find(')') - prompt.find('('))
+               data = stoi(prompt.substr(prompt.find('('), prompt.find(')') - prompt.find('(')));
                write(package.processes[pnum].pipeWrite[1], &data, sizeof(data)); 
                break;
             case 2:
@@ -104,7 +104,7 @@ int main(int argc, char** argv) {
                //write instruction id 2
                write(package.processes[pnum].pipeWrite[1], &instr, sizeof(instr));
                //write number of cylces to run use
-               data = stoi(prompt.substr(prompt.find('(')), prompt.find(')') - prompt.find('('))
+               data = stoi(prompt.substr(prompt.find('('), prompt.find(')') - prompt.find('(')));
                write(package.processes[pnum].pipeWrite[1], &data, sizeof(data));
                //add myResources to master string
 
@@ -147,7 +147,6 @@ int main(int argc, char** argv) {
          //wait for signal to run next instruction
       }
       //cout << "PROCESS " << pnum + 1 << " instruction: " << package.processes[pnum].instructions[0] << endl;
-      write(package.processes[pnum].pipeWrite[1], &unit, sizeof(unit));//used to increment time
       return 0;
    }
    else {
