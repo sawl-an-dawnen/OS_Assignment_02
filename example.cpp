@@ -57,7 +57,7 @@ cout<<"ok here"<<endl;
 //Re creating bank example
 // pnum -1 is the bank account
 // pnum 0 is customer 1 depositing 3 $ into the bank account
-//pnum 1 is customer 2 depositing $4 into the bank account
+// pnum 1 is customer 2 depositing $4 into the bank account
 switch(pnum)
 {
 	case(-1):

@@ -25,6 +25,31 @@ int main(int argc, char** argv) {
    semop(sid,&sb[1],1); // default value of a semaphore is 0 (waiting for a release) so you have to increment it by one like here
    // in order for the first process that hit's semaphore 0 to keep running.
 
+   int shmid; // shared memory ID
+   vector<vector<int>> *allocated;
+
+   shmid = shmget(321,sizeof(allocated),IPC_CREAT | 0666); // making a shared variable for bank account (this is basically memory allocation).
+
+   if(shmid<0){
+   cout<<"error with shmid"<<endl;
+   exit(1);
+   }
+
+   allocated = (vector<vector<int>> *)shmat(shmid,NULL,0);// shared memory bank account being declared
+   if (allocated ==(vector<vector<int>> *) (-1))
+   {
+   cout<<"bank_account error"<<endl;
+   exit(1);
+   }
+   for (int i = 0; i < package.r; i++) {
+      vector<int> temp;
+      for (int j = 0; j < package.resources[i].instances.size(); j++) {
+         temp.push_back(1);
+      }
+      allocated->push_back(temp);
+   }
+   //in shared memory index r for resource and i for instance allocated[r][i],,, if == 1 is available, and 0 not available, index i will tell which version of the resource is taken
+
    int pnum = -1;
    int pid;
    for(int k =0; k<package.p+1; k++)  { //will create the number of processes in package
