@@ -26,41 +26,35 @@ int main(int argc, char** argv) {
    // in order for the first process that hit's semaphore 0 to keep running.
 
    int shmid; // shared memory ID
-   vector<vector<int>> *allocated;
+   int *allocated;
+   vector<int*> allocation;
 
-   shmid = shmget(321,sizeof(allocated),IPC_CREAT | 0666); // making a shared variable for bank account (this is basically memory allocation).
+   for (int i = 0; i < package.r; i++ ) {
+      shmid = shmget(321,sizeof(allocated),IPC_CREAT | 0666); // making a shared variable for bank account (this is basically memory allocation).
 
-   if(shmid<0){
-   cout<<"error with shmid"<<endl;
-   exit(1);
-   }
-
-   allocated = (vector<vector<int>> *)shmat(shmid,NULL,0);// shared memory bank account being declared
-   if (allocated ==(vector<vector<int>> *) (-1))
-   {
-   cout<<"bank_account error"<<endl;
-   exit(1);
-   }
-   for (int i = 0; i < package.r; i++) {
-      vector<int> temp;
-      for (int j = 0; j < package.resources[i].instances.size(); j++) {
-         temp.push_back(1);
+      if(shmid<0){
+      cout<<"error with shmid"<<endl;
+      exit(1);
       }
-      allocated->push_back(temp);
-   }
-   //in shared memory index r for resource and i for instance allocated[r][i],,, if == 1 is available, and 0 not available, index i will tell which version of the resource is taken
 
+      allocated = (int *)shmat(shmid,NULL,0);// shared memory bank account being declared
+      if (allocated == (int *) (-1))
+      {
+      cout<<"allocated error"<<endl;
+      exit(1);
+      }
+      allocation.push_back(allocated);
+      *allocation[i] = 0;
+   }
    int pnum = -1;
    int pid;
    for(int k =0; k<package.p+1; k++)  { //will create the number of processes in package
       pid = fork();
 	   if(pid ==0) {
 	      pnum = k;
-         cout << pnum << endl;
 	      break;
 	   }
    }
-
 
    //pnum 0 - package.p are children
    //pnum package.p + 1 is the process manager
@@ -98,21 +92,29 @@ int main(int argc, char** argv) {
          if (prompt.find("end") != string::npos) {instr = 5;}
          switch (instr) {
             case 0:
-               // this will look at the available resources and its own max, if either is false this is rejected
-               //request in the format of request(0,0,...m) where m is the number of resources requested in the resource index order set
-               cout << "process " << pnum << " calling request function..." << endl;
-               //write pnum
-               write(package.processes[pnum].pipeWrite[1], &pnum, sizeof(pnum));
-               //write instruction id 0
-               write(package.processes[pnum].pipeWrite[1], &instr, sizeof(instr));
-               //write each resouce request one after another
-               prompt.erase(0,7);//erase "request"
-               for (int j = 0; j < package.r; j++) {
-                  //write the resource being requested
+               int response; //0 request rejected, 1 request approved
+               while(bool makeRequest = true) {
+                  // this will look at the available resources and its own max, if either is false this is rejected
+                  //request in the format of request(0,0,...m) where m is the number of resources requested in the resource index order set
+                  cout << "process " << pnum << " calling request function..." << endl;
+                  //write pnum
+                  write(package.processes[pnum].pipeWrite[1], &pnum, sizeof(pnum));
+                  //write instruction id 0
+                  write(package.processes[pnum].pipeWrite[1], &instr, sizeof(instr));
+                  //write each resouce request one after another
+                  for (int j = 0; j < package.r; j++) {
+                     //write the resource being requested to management process
+                  }
+                  read(package.processes[pnum].pipeRead[0], &response, sizeof(int));
+                  if (response == 1)   {
+                     //write the resource being requested to my resources
+                     //break out of while
+                     makeRequest = false;
+                  }
                }
-               //increment myResources
                break;
             case 1:
+
                cout << "process " << pnum << " calling calculate function..." << endl;
                //write pnum
                write(package.processes[pnum].pipeWrite[1], &pnum, sizeof(pnum));
@@ -120,7 +122,9 @@ int main(int argc, char** argv) {
                write(package.processes[pnum].pipeWrite[1], &instr, sizeof(instr));
                //write number of cylces to run calculations
                data = stoi(prompt.substr(prompt.find('('), prompt.find(')') - prompt.find('(')));
+               cout << data << endl;
                write(package.processes[pnum].pipeWrite[1], &data, sizeof(data)); 
+
                break;
             case 2:
                cout << "process " << pnum << " calling use function..." << endl;
@@ -129,10 +133,9 @@ int main(int argc, char** argv) {
                //write instruction id 2
                write(package.processes[pnum].pipeWrite[1], &instr, sizeof(instr));
                //write number of cylces to run use
-               data = stoi(prompt.substr(prompt.find('('), prompt.find(')') - prompt.find('(')));
+               //data = stoi(prompt.substr(prompt.find('('), prompt.find(')') - prompt.find('(')));
                write(package.processes[pnum].pipeWrite[1], &data, sizeof(data));
                //add myResources to master string
-
                for (int j = 0; j < package.r; j++) {
                   for (int k = 0; k < package.resources.size(); k++) {
                      masterString[j][k] = masterString[j][k] + myResources[j][k];
@@ -157,7 +160,7 @@ int main(int argc, char** argv) {
                //write instruction id 4
                write(package.processes[pnum].pipeWrite[1], &instr, sizeof(instr));
                //write time to add
-               //decrement my resources
+               //clear my resources
                //increment package allocated and available
                break;
             case 5:
@@ -174,7 +177,7 @@ int main(int argc, char** argv) {
       //cout << "PROCESS " << pnum + 1 << " instruction: " << package.processes[pnum].instructions[0] << endl;
       return 0;
    }
-   else {
+   else if (pnum != -1) {
       int timePassed = 0;
       int data;
       int instr;
@@ -183,6 +186,10 @@ int main(int argc, char** argv) {
       //read from all three processes and try to complete their requests
       //wait for all three processes to get their unit time in, == to number of processes
       //then signal for next process
+      for (int i = 0; i < package.r; i++) {
+         *allocation[i] = i;
+         cout << "from shared: " << *allocation[i] << endl;
+      }
       return 0;
    }
 
@@ -208,6 +215,13 @@ int main(int argc, char** argv) {
    //	Destroy the semaphores
 	semctl(sid, 0, IPC_RMID);
 
+   shmdt((void *) allocated);//needs to delete all shared memory in vector shared
+
    return 0;
 }
 
+/*
+REFERENCES:
+1.https://pubs.opengroup.org/onlinepubs/009695399/functions/semop.html#:~:text=%20%20%20%20Member%20Type%20%20,%20%20sem_flg%20%20%20Operation%20flags.%20
+2.
+*/
